@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portal-twa-gs-v5';
+const CACHE_NAME = 'portal-twa-gs-v6';
 const ASSETS = [
   './',
   './index.html',
