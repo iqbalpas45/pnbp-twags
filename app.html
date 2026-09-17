@@ -557,15 +557,15 @@
         // ============================================
         const SUPABASE_URL = 'https://ydngshjcrjkerwztibjo.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkbmdzaGpjcmprZXJ3enRpYmpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDgxNjMsImV4cCI6MjEwNDgyNDE2M30.nCkqru3ktp4_OkQBXh59iWDFS8SYL79tjoZsIl23v1o';
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         // ============================================
         // SUPABASE DATA FUNCTIONS (FULL CRUD + OFFLINE)
         // ============================================
         async function loadSupabaseData() {
             try {
-                if (!supabase) throw new Error('Supabase client tidak tersedia');
-                const { data, error } = await supabase
+                if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+                const { data, error } = await supabaseClient
                     .from('transaksiHarian')
                     .select('*')
                     .order('tanggal', { ascending: false });
@@ -590,8 +590,8 @@
 
             // Load Custom Holidays
             try {
-                if (supabase) {
-                    const { data: hData, error: hErr } = await supabase.from('customHolidays').select('*');
+                if (supabaseClient) {
+                    const { data: hData, error: hErr } = await supabaseClient.from('customHolidays').select('*');
                     if (!hErr && hData && hData.length > 0) {
                         store.customHolidays = hData;
                         localStorage.setItem('twa_cached_holidays', JSON.stringify(hData));
@@ -619,8 +619,8 @@
             const recordToSave = { ...trans, id: maxId + 1 };
 
             try {
-                if (!supabase) throw new Error('Supabase client offline');
-                const { error } = await supabase.from('transaksiHarian').insert([recordToSave]);
+                if (!supabaseClient) throw new Error('Supabase client offline');
+                const { error } = await supabaseClient.from('transaksiHarian').insert([recordToSave]);
                 if (error) throw error;
                 store.transaksiHarian.unshift(recordToSave);
                 localStorage.setItem('twa_cached_transaksi', JSON.stringify(store.transaksiHarian));
@@ -635,8 +635,8 @@
 
         async function updateToSupabase(trans) {
             try {
-                if (!supabase) throw new Error('Supabase client offline');
-                const { error } = await supabase
+                if (!supabaseClient) throw new Error('Supabase client offline');
+                const { error } = await supabaseClient
                     .from('transaksiHarian')
                     .update(trans)
                     .eq('id', trans.id);
@@ -652,8 +652,8 @@
 
         async function deleteFromSupabase(id) {
             try {
-                if (!supabase) throw new Error('Supabase client offline');
-                const { error } = await supabase
+                if (!supabaseClient) throw new Error('Supabase client offline');
+                const { error } = await supabaseClient
                     .from('transaksiHarian')
                     .delete()
                     .eq('id', id);
@@ -2189,9 +2189,9 @@
                     store.customHolidays.push(newH);
                     localStorage.setItem('twa_cached_holidays', JSON.stringify(store.customHolidays));
 
-                    if (supabase) {
+                    if (supabaseClient) {
                         try {
-                            await supabase.from('customHolidays').insert([newH]);
+                            await supabaseClient.from('customHolidays').insert([newH]);
                         } catch(err) {
                             console.warn('Gagal simpan holiday ke Supabase:', err);
                         }
@@ -2327,12 +2327,12 @@
             if (confirm(`Hapus hari libur "${h.nama}"?`)) {
                 store.customHolidays.splice(index, 1);
                 localStorage.setItem('twa_cached_holidays', JSON.stringify(store.customHolidays));
-                if (supabase) {
+                if (supabaseClient) {
                     try {
                         if (h.id) {
-                            await supabase.from('customHolidays').delete().eq('id', h.id);
+                            await supabaseClient.from('customHolidays').delete().eq('id', h.id);
                         } else {
-                            await supabase.from('customHolidays').delete().eq('nama', h.nama);
+                            await supabaseClient.from('customHolidays').delete().eq('nama', h.nama);
                         }
                     } catch(e) {}
                 }
