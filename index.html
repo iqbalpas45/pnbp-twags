@@ -245,7 +245,7 @@
 </head>
 <body class="bg-blue-50 dark:bg-gray-900">
     <!-- Personal PIN Access Modal -->
-    <div id="pinModal" class="hidden fixed inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-gray-950 flex items-center justify-center z-50 p-4">
+    <div id="pinModal" style="display: none;" class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm w-full border border-gray-100 dark:border-gray-700 text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white shadow-lg mb-4">
                 <i class="fas fa-lock text-2xl"></i>
@@ -689,7 +689,7 @@
                     sessionStorage.setItem('twa_unlocked', 'true');
                 }
                 const pinModal = document.getElementById('pinModal');
-                if (pinModal) pinModal.classList.add('hidden');
+                if (pinModal) pinModal.style.display = 'none';
             },
             lock() {
                 localStorage.removeItem('twa_unlocked');
@@ -697,24 +697,23 @@
                 const pinModal = document.getElementById('pinModal');
                 const pinInput = document.getElementById('pinInput');
                 if (pinInput) pinInput.value = '';
-                if (pinModal) pinModal.classList.remove('hidden');
+                if (pinModal) pinModal.style.display = 'flex';
                 if (pinInput) pinInput.focus();
                 showToast('🔒 Aplikasi telah dikunci');
             }
         };
 
         function checkPinStatus() {
+            const pinModal = document.getElementById('pinModal');
             if (SecurityManager.isUnlocked()) {
-                const pinModal = document.getElementById('pinModal');
-                if (pinModal) pinModal.classList.add('hidden');
+                if (pinModal) pinModal.style.display = 'none';
                 return true;
             } else {
-                const pinModal = document.getElementById('pinModal');
-                if (pinModal) pinModal.classList.remove('hidden');
+                if (pinModal) pinModal.style.display = 'flex';
                 setTimeout(() => {
                     const input = document.getElementById('pinInput');
                     if (input) input.focus();
-                }, 150);
+                }, 100);
                 return false;
             }
         }
@@ -728,6 +727,7 @@
             if (pin === SecurityManager.getPin()) {
                 SecurityManager.unlock(remember);
                 showToast('✅ Akses diterima! Memuat data...');
+                render();
                 loadSupabaseData();
             } else {
                 showToast('❌ PIN salah! Coba lagi.');
@@ -2364,20 +2364,28 @@
             }
         }
 
-        // Page Initialization
-        window.addEventListener('DOMContentLoaded', async () => {
+        // App Initialization
+        function initApp() {
             // Register Service Worker for offline PWA
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
             }
 
+            // Always render layout & navigation immediately so page is never blank
+            render();
+
             // Check PIN security
             const isUnlocked = checkPinStatus();
             if (isUnlocked) {
-                render();
-                await loadSupabaseData();
+                loadSupabaseData();
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
